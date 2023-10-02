@@ -54,7 +54,7 @@ namespace gazebo
 
         std::string result_topic = "";
 
-        if(_sdf->HasElement("publish_topic"))
+        if (_sdf->HasElement("publish_topic"))
             result_topic = _sdf->GetElement("publish_topic")->Get<std::string>();
 
         this->uwb_pub = this->nh_.advertise<uwb_gazebo_plugin::uwbPose>("uwb_notify", 1);
@@ -63,11 +63,20 @@ namespace gazebo
         this->result_pub = this->nh_.advertise<mrs_msgs::RangeWithCovarianceArrayStamped>(result_topic, 1);
 
         this->uwb_id = 0;
+        this->sensitivity = -150;
+        this->stddev = 0.1;
+        this->generator = std::default_random_engine();
 
         if (_sdf->HasElement("uwb_id"))
             this->uwb_id = _sdf->GetElement("uwb_id")->Get<int>();
 
-        if(_sdf->HasElement("frame_name"))
+        if (_sdf->HasElement("stddev"))
+            this->stddev = _sdf->GetElement("stddev")->Get<double>();
+
+        if (_sdf->HasElement("sensitivity"))
+            this->sensitivity = _sdf->GetElement("sensitivity")->Get<int>();
+
+        if (_sdf->HasElement("frame_name"))
             this->uwb_frame = _sdf->GetElement("frame_name")->Get<std::string>();
 
         std::cout << "UWB ID: " << uwb_id << std::endl;
@@ -94,6 +103,12 @@ namespace gazebo
         double dBm = this->parentSensor->SignalStrength(ignition::math::Pose3d(msg->x.data, msg->y.data, msg->z.data, 0., 0., 0.), this->parentSensor->Gain());
         double distance = (pose - ignition::math::Vector3d(msg->x.data, msg->y.data, msg->z.data)).Length();
 
+        std::normal_distribution<double> distribution(distance, this->stddev);
+        distance = distribution(this->generator);
+
+        if (dBm < this->sensitivity)
+            return;
+
         mrs_msgs::RangeWithCovarianceArrayStamped result;
 
         result.header.stamp = ros::Time::now();
@@ -106,13 +121,13 @@ namespace gazebo
         range.power_a = dBm;
         range.power_b = dBm;
 
-        range.range.field_of_view = 2*M_PI;
+        range.range.field_of_view = 2 * M_PI;
         range.range.max_range = 100;
         range.range.min_range = 0;
         range.range.radiation_type = 3;
         range.range.range = distance;
         range.range.header.frame_id = this->uwb_frame;
-        range.variance = 0.1;
+        range.variance = this->stddev * this->stddev;
 
         result.ranges.push_back(range);
 

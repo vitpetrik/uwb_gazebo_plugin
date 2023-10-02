@@ -2,6 +2,7 @@
 #define GAZEBO_ROS_TEMPLATE_HH
 
 #include <ros/ros.h>
+#include <random>
 
 #include <gazebo/gazebo.hh>
 #include <gazebo/common/common.hh>
@@ -42,6 +43,9 @@ namespace gazebo
 
    private:
       uint32_t uwb_id;
+      double sensitivity;
+      double stddev;
+      std::default_random_engine generator;
 
       std::string uwb_frame;
 
