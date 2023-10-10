@@ -31,6 +31,7 @@ catkin_package(
 )
 
 find_package(gazebo REQUIRED)
+ign_import_target(UUID)
 find_package(roscpp REQUIRED)
 include_directories(${GAZEBO_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS} inc)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GAZEBO_CXX_FLAGS}")
