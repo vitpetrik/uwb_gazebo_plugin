@@ -15,6 +15,10 @@ find_package(catkin REQUIRED COMPONENTS
   mrs_msgs
 )
 
+set(LIBRARIES
+  uwb_range
+)
+
 add_message_files(DIRECTORY msg FILES
   uwbPose.msg
   )
@@ -31,11 +35,24 @@ catkin_package(
 )
 
 find_package(gazebo REQUIRED)
+
 ign_import_target(UUID)
+
 find_package(roscpp REQUIRED)
+
 include_directories(${GAZEBO_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS} inc)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GAZEBO_CXX_FLAGS}")
 
 add_library(uwb_range SHARED src/uwb_range.cpp)
 target_link_libraries(uwb_range ${GAZEBO_LIBRARIES})
 add_dependencies(uwb_range ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
+install(TARGETS ${LIBRARIES}
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+  )
+
+install(DIRECTORY msg
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+  )
